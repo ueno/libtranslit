@@ -100,5 +100,6 @@ AC_CONFIG_FILES([Makefile
 libtranslit/Makefile
 libtranslit/libtranslit.pc
 modules/Makefile
-tests/Makefile])
+tests/Makefile
+docs/Makefile])
 AC_OUTPUT

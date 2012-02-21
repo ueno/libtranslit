@@ -16,6 +16,12 @@
 
 SUBDIRS = libtranslit modules tests
 
+if ENABLE_GTK_DOC
+SUBDIRS += docs
+endif
+
+DISTCHECK_CONFIGURE_FLAGS = --enable-gtk-doc
+
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = git.mk
 
