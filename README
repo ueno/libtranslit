@@ -1,0 +1,40 @@
+* libtranslit -- ASCII to Unicode translitaration library with multiple backends
+
+WIP.
+
+Test:
+
+ $ python
+ >>> from gi.repository import Translit
+ >>> filter = Translit.Filter.get("m17n:hi:inscript")
+ >>> filter.filter('a', 0)
+ False
+ >>> filter.poll_output()
+ '\xe0\xa5\x8b'                 # U+094B
+ >>> filter.filter('d', 0)      # 'd' = U+094D or 'dd' = U+094D + U+200c
+ True
+ >>> filter.filter('d', 0)
+ False
+ >>> filter.poll_output()
+ '\xe0\xa5\x8d\xe2\x80\x8c'     # U+094D + U+200c
+ >>> filter.filter('d', 0)
+ True
+ >>> filter.filter('a', 0)
+ False
+ >>> filter.poll_output()
+ '\xe0\xa5\x8d\xe0\xa5\x8b'     # U+094D + U+094B
+
+License:
+
+GPLv3+
+
+Copyright (C) 2012 Daiki Ueno <ueno@unixuser.org>
+Copyright (C) 2012 Red Hat, Inc.
+
+This file is free software; as a special exception the author gives
+unlimited permission to copy and/or distribute it, with or without
+modifications, as long as this notice is preserved.
+
+This file is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
