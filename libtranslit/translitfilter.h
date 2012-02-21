@@ -33,11 +33,14 @@ G_BEGIN_DECLS
 
 typedef struct _TranslitFilter TranslitFilter;
 typedef struct _TranslitFilterClass TranslitFilterClass;
+typedef struct _TranslitFilterPrivate TranslitFilterPrivate;
 
 struct _TranslitFilter
 {
   /*< private >*/
   GObject parent;
+  
+  TranslitFilterPrivate *priv;
 };
 
 struct _TranslitFilterClass
@@ -58,8 +61,11 @@ gboolean        translit_filter_filter      (TranslitFilter      *filter,
                                              TranslitModifierType modifiers);
 gchar          *translit_filter_poll_output (TranslitFilter      *filter);
 
-TranslitFilter *translit_filter_get         (const gchar         *name);
-void            translit_filter_implement   (const gchar         *name,
+TranslitFilter *translit_filter_get         (const gchar         *backend,
+                                             const gchar         *language,
+                                             const gchar         *name);
+void            translit_filter_implement_backend
+                                            (const gchar         *backend,
                                              GType                type);
 
 G_END_DECLS

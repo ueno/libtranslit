@@ -6,7 +6,7 @@ Test:
 
  $ python
  >>> from gi.repository import Translit
- >>> filter = Translit.Filter.get("m17n:hi:inscript")
+ >>> filter = Translit.Filter.get("m17n", "hi", "inscript")
  >>> filter.filter('a', 0)
  False
  >>> filter.poll_output()

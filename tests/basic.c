@@ -23,7 +23,7 @@ basic (void)
 {
   TranslitFilter *filter;
 
-  filter = translit_filter_get ("m17n:hi:inscript");
+  filter = translit_filter_get ("m17n", "hi", "inscript");
   if (filter)
     {
       gboolean retval;

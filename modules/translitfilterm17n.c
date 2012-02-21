@@ -32,8 +32,6 @@ struct _TranslitFilterM17n
   TranslitFilter parent;
   MInputMethod *im;
   MInputContext *ic;
-  char *language;
-  char *name;
   MSymbol symbol;
 };
 
@@ -44,13 +42,6 @@ struct _TranslitFilterM17nClass
 
 typedef struct _TranslitFilterM17n TranslitFilterM17n;
 typedef struct _TranslitFilterM17nClass TranslitFilterM17nClass;
-
-enum
-  {
-    PROP_0,
-    PROP_LANGUAGE,
-    PROP_NAME
-  };
 
 static void initable_iface_init (GInitableIface *initable_iface);
 
@@ -117,64 +108,12 @@ translit_filter_m17n_real_poll_output (TranslitFilter *self)
 }
 
 static void
-translit_filter_m17n_set_property (GObject      *object,
-                                   guint         prop_id,
-                                   const GValue *value,
-                                   GParamSpec   *pspec)
-{
-  TranslitFilterM17n *m17n = TRANSLIT_FILTER_M17N (object);
-
-  switch (prop_id)
-    {
-    case PROP_LANGUAGE:
-      g_free (m17n->language);
-      m17n->language = g_value_dup_string (value);
-      break;
-    case PROP_NAME:
-      g_free (m17n->name);
-      m17n->name = g_value_dup_string (value);
-      break;
-    default:
-      g_object_set_property (object,
-			     g_param_spec_get_name (pspec),
-			     value);
-      break;
-    }
-}
-
-static void
-translit_filter_m17n_get_property (GObject    *object,
-                                   guint       prop_id,
-                                   GValue     *value,
-                                   GParamSpec *pspec)
-{
-  TranslitFilterM17n *m17n = TRANSLIT_FILTER_M17N (object);
-
-  switch (prop_id)
-    {
-    case PROP_LANGUAGE:
-      g_value_set_string (value, m17n->language);
-      break;
-    case PROP_NAME:
-      g_value_set_string (value, m17n->name);
-      break;
-    default:
-      g_object_get_property (object,
-			     g_param_spec_get_name (pspec),
-			     value);
-      break;
-    }
-}
-
-static void
 translit_filter_m17n_finalize (GObject *object)
 {
   TranslitFilterM17n *m17n = TRANSLIT_FILTER_M17N (object);
 
   minput_destroy_ic (m17n->ic);
   minput_close_im (m17n->im);
-  g_free (m17n->language);
-  g_free (m17n->name);
 
   G_OBJECT_CLASS (translit_filter_m17n_parent_class)->finalize (object);
 }
@@ -189,23 +128,7 @@ translit_filter_m17n_class_init (TranslitFilterM17nClass *klass)
   filter_class->filter = translit_filter_m17n_real_filter;
   filter_class->poll_output = translit_filter_m17n_real_poll_output;
 
-  gobject_class->set_property = translit_filter_m17n_set_property;
-  gobject_class->get_property = translit_filter_m17n_get_property;
   gobject_class->finalize = translit_filter_m17n_finalize;
-
-  pspec = g_param_spec_string ("language",
-			       "language",
-			       "Language",
-			       NULL,
-			       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
-  g_object_class_install_property (gobject_class, PROP_LANGUAGE, pspec);
-
-  pspec = g_param_spec_string ("name",
-			       "name",
-			       "Name",
-			       NULL,
-			       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
-  g_object_class_install_property (gobject_class, PROP_NAME, pspec);
 
   M17N_INIT ();
   utf8_converter = mconv_buffer_converter (Mcoding_utf_8, NULL, 0);
@@ -221,10 +144,6 @@ translit_filter_m17n_class_finalize (TranslitFilterM17nClass *klass)
 static void
 translit_filter_m17n_init (TranslitFilterM17n *self)
 {
-  g_object_get (G_OBJECT (self),
-		"language", &self->language,
-		"name", &self->name,
-		NULL);
 }
 
 static gboolean
@@ -233,10 +152,19 @@ initable_init (GInitable *initable,
 	       GError **error)
 {
   TranslitFilterM17n *m17n = TRANSLIT_FILTER_M17N (initable);
+  char *language, *name;
 
-  m17n->im = minput_open_im (msymbol (m17n->language),
-			     msymbol (m17n->name),
+  g_object_get (G_OBJECT (initable),
+		"language", &language,
+		"name", &name,
+		NULL);
+
+  m17n->im = minput_open_im (msymbol (language),
+			     msymbol (name),
 			     NULL);
+  g_free (language);
+  g_free (name);
+
   if (m17n->im)
     {
       m17n->ic = minput_create_ic (m17n->im, NULL);
@@ -255,5 +183,5 @@ void
 translit_filter_m17n_register (GTypeModule *module)
 {
   translit_filter_m17n_register_type (module);
-  translit_filter_implement ("m17n", translit_filter_m17n_get_type ());
+  translit_filter_implement_backend ("m17n", translit_filter_m17n_get_type ());
 }
