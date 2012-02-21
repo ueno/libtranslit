@@ -23,6 +23,15 @@ basic (void)
 {
   TranslitFilter *filter;
 
+  filter = translit_filter_get ("nonexistent", "nonexistent", "nonexistent");
+  g_assert (filter == NULL);
+
+  filter = translit_filter_get ("m17n", "nonexistent", "nonexistent");
+  g_assert (filter == NULL);
+
+  filter = translit_filter_get ("m17n", "hi", "nonexistent");
+  g_assert (filter == NULL);
+
   filter = translit_filter_get ("m17n", "hi", "inscript");
   if (filter)
     {

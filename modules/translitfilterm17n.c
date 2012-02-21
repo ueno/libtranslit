@@ -112,8 +112,10 @@ translit_filter_m17n_finalize (GObject *object)
 {
   TranslitFilterM17n *m17n = TRANSLIT_FILTER_M17N (object);
 
-  minput_destroy_ic (m17n->ic);
-  minput_close_im (m17n->im);
+  if (m17n->ic)
+    minput_destroy_ic (m17n->ic);
+  if (m17n->im)
+    minput_close_im (m17n->im);
 
   G_OBJECT_CLASS (translit_filter_m17n_parent_class)->finalize (object);
 }
