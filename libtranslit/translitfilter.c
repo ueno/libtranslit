@@ -41,6 +41,12 @@ struct _TranslitFilterPrivate
 static GHashTable *filters = NULL;
 static GHashTable *filter_types = NULL;
 
+GQuark
+translit_filter_error_quark (void)
+{
+  return g_quark_from_static_string ("translit-filter-error-quark");
+}
+
 static gboolean
 translit_filter_real_filter (TranslitFilter      *self,
                              gchar                ascii,
@@ -254,6 +260,7 @@ load_module (const gchar **paths, const char *module_name)
  * @backend: backend name (e.g. "m17n")
  * @language: language code (e.g. "hi")
  * @name: name of the filter (e.g. "inscript")
+ * @error: a #GError
  *
  * Get a filter instance whose name is @name.
  *
@@ -262,11 +269,17 @@ load_module (const gchar **paths, const char *module_name)
 TranslitFilter *
 translit_filter_get (const gchar *backend,
                      const gchar *language,
-                     const gchar *name)
+                     const gchar *name,
+                     GError     **error)
 {
   gchar *filter_id;
-  gpointer data;
+  GType filter_type;
   TranslitFilter *filter = NULL;
+  GParameter filter_parameters[2] = {
+	{ "language", G_VALUE_INIT },
+	{ "name", G_VALUE_INIT }
+      };
+  gpointer data;
 
   filter_id = g_strdup_printf ("%s:%s:%s", backend, language, name);
   if (filters != NULL)
@@ -302,45 +315,47 @@ translit_filter_get (const gchar *backend,
     }
 
   data = g_hash_table_lookup (filter_types, backend);
-  if (data != NULL)
+  if (data == NULL)
     {
-      GType type = GPOINTER_TO_SIZE (data);
-      GParameter parameters[2] = {
-	{ "language", G_VALUE_INIT },
-	{ "name", G_VALUE_INIT }
-      };
-      g_value_init (&parameters[0].value, G_TYPE_STRING);
-      g_value_set_string (&parameters[0].value, language);
-      g_value_init (&parameters[1].value, G_TYPE_STRING);
-      g_value_set_string (&parameters[1].value, name);
+      g_free (filter_id);
+      g_set_error (error,
+		   TRANSLIT_FILTER_ERROR,
+		   TRANSLIT_FILTER_ERROR_NO_BACKEND_TYPE,
+		   "no such backend type %s",
+		   backend);
+      return NULL;
+    }
 
-      if (g_type_is_a (type, G_TYPE_INITABLE))
-	{
-	  GError *error = NULL;
-	  filter = g_initable_newv (type,
-				    G_N_ELEMENTS (parameters),
-				    parameters,
-				    NULL,
-				    &error);
-	  if (filter == NULL)
-	    g_printerr ("can't initialize filter backend %s: %s\n",
-			backend, error->message);
-	}
-      else
-	filter = g_object_newv (type,
-				G_N_ELEMENTS (parameters),
-				parameters);
+  filter_type = GPOINTER_TO_SIZE (data);
+  g_value_init (&filter_parameters[0].value, G_TYPE_STRING);
+  g_value_set_string (&filter_parameters[0].value, language);
+  g_value_init (&filter_parameters[1].value, G_TYPE_STRING);
+  g_value_set_string (&filter_parameters[1].value, name);
 
-      if (filter != NULL)
+  if (g_type_is_a (filter_type, G_TYPE_INITABLE))
+    {
+      filter = g_initable_newv (filter_type,
+				G_N_ELEMENTS (filter_parameters),
+				filter_parameters,
+				NULL,
+				error);
+      if (filter == NULL)
 	{
-	  if (filters == NULL)
-	    filters = g_hash_table_new_full (g_str_hash,
-					     g_str_equal,
-					     (GDestroyNotify) g_free,
-					     NULL);
-	  g_hash_table_insert (filters, g_strdup (filter_id), filter);
+	  g_free (filter_id);
+	  return NULL;
 	}
     }
+  else
+    filter = g_object_newv (filter_type,
+			    G_N_ELEMENTS (filter_parameters),
+			    filter_parameters);
+
+  if (filters == NULL)
+    filters = g_hash_table_new_full (g_str_hash,
+				     g_str_equal,
+				     (GDestroyNotify) g_free,
+				     NULL);
+  g_hash_table_insert (filters, g_strdup (filter_id), filter);
   g_free (filter_id);
   return filter;
 }
@@ -351,10 +366,4 @@ translit_filter_implement_backend (const gchar *backend, GType type)
   g_hash_table_insert (filter_types,
 		       g_strdup (backend),
 		       GSIZE_TO_POINTER (type));
-}
-
-GQuark
-translit_module_error_quark (void)
-{
-  return g_quark_from_static_string ("translit-module-error-quark");
 }

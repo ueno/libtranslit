@@ -22,17 +22,32 @@ static void
 basic (void)
 {
   TranslitFilter *filter;
+  GError *error;
 
-  filter = translit_filter_get ("nonexistent", "nonexistent", "nonexistent");
-  g_assert (filter == NULL);
+  error = NULL;
+  filter = translit_filter_get ("nonexistent", "nonexistent", "nonexistent",
+				&error);
+  g_assert_error (error,
+		  TRANSLIT_FILTER_ERROR,
+		  TRANSLIT_FILTER_ERROR_NO_BACKEND_TYPE);
 
-  filter = translit_filter_get ("m17n", "nonexistent", "nonexistent");
-  g_assert (filter == NULL);
+  error = NULL;
+  filter = translit_filter_get ("m17n", "nonexistent", "nonexistent",
+				&error);
+  g_assert_error (error,
+		  TRANSLIT_FILTER_ERROR,
+		  TRANSLIT_FILTER_ERROR_LOAD_FAILED);
 
-  filter = translit_filter_get ("m17n", "hi", "nonexistent");
-  g_assert (filter == NULL);
+  error = NULL;
+  filter = translit_filter_get ("m17n", "hi", "nonexistent",
+				&error);
+  g_assert_error (error,
+		  TRANSLIT_FILTER_ERROR,
+		  TRANSLIT_FILTER_ERROR_LOAD_FAILED);
 
-  filter = translit_filter_get ("m17n", "hi", "inscript");
+  error = NULL;
+  filter = translit_filter_get ("m17n", "hi", "inscript",
+				&error);
   if (filter)
     {
       gboolean retval;

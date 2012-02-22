@@ -55,9 +55,10 @@ struct _TranslitFilterClass
   gchar   *(*poll_output) (TranslitFilter      *filter);
 };
 
-#define TRANSLIT_MODULE_ERROR translit_module_error_quark ()
+#define TRANSLIT_FILTER_ERROR translit_filter_error_quark ()
 typedef enum {
-  TRANSLIT_MODULE_ERROR_FAILED
+  TRANSLIT_FILTER_ERROR_NO_BACKEND_TYPE,
+  TRANSLIT_FILTER_ERROR_LOAD_FAILED,
 } TranslitModuleErrorEnum;
 
 GType           translit_filter_get_type    (void) G_GNUC_CONST;
@@ -68,7 +69,8 @@ gchar          *translit_filter_poll_output (TranslitFilter      *filter);
 
 TranslitFilter *translit_filter_get         (const gchar         *backend,
                                              const gchar         *language,
-                                             const gchar         *name);
+                                             const gchar         *name,
+                                             GError             **error);
 void            translit_filter_implement_backend
                                             (const gchar         *backend,
                                              GType                type);

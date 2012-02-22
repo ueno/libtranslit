@@ -173,8 +173,8 @@ initable_init (GInitable *initable,
       return TRUE;
     }
   g_set_error (error,
-	       TRANSLIT_MODULE_ERROR,
-	       TRANSLIT_MODULE_ERROR_FAILED,
+	       TRANSLIT_FILTER_ERROR,
+	       TRANSLIT_FILTER_ERROR_LOAD_FAILED,
 	       "can't open m17n IM");
   return FALSE;
 }
