@@ -55,6 +55,11 @@ struct _TranslitFilterClass
   gchar   *(*poll_output) (TranslitFilter      *filter);
 };
 
+#define TRANSLIT_MODULE_ERROR translit_module_error_quark ()
+typedef enum {
+  TRANSLIT_MODULE_ERROR_FAILED
+} TranslitModuleErrorEnum;
+
 GType           translit_filter_get_type    (void) G_GNUC_CONST;
 gboolean        translit_filter_filter      (TranslitFilter      *filter,
                                              gchar                ascii,

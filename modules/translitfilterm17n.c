@@ -172,6 +172,10 @@ initable_init (GInitable *initable,
       m17n->ic = minput_create_ic (m17n->im, NULL);
       return TRUE;
     }
+  g_set_error (error,
+	       TRANSLIT_MODULE_ERROR,
+	       TRANSLIT_MODULE_ERROR_FAILED,
+	       "can't open m17n IM");
   return FALSE;
 }
 

@@ -192,57 +192,61 @@ translit_filter_poll_output (TranslitFilter *filter)
   return TRANSLIT_FILTER_GET_CLASS (filter)->poll_output (filter);
 }
 
-static gboolean
-is_valid_module_name (const gchar *basename)
+static gchar *
+build_module_filename (const gchar *name)
 {
-  gboolean result;
-
 #if !defined(G_OS_WIN32) && !defined(G_WITH_CYGWIN)
-  if (!g_str_has_prefix (basename, "lib") ||
-      !g_str_has_suffix (basename, ".so"))
-    return FALSE;
+  return g_strdup_printf ("libtranslit%s.so", name);
 #else
-  if (!g_str_has_suffix (basename, ".dll"))
-    return FALSE;
+  return g_strdup_printf ("translit%s.dll", name);
 #endif
-
-  return TRUE;
 }
 
 static void
-load_all_modules (const char *dirname)
+load_module (const gchar **paths, const char *module_name)
 {
-  GDir *dir;
   const gchar *name;
+  gchar *path, *module_filename;
 
   if (!g_module_supported ())
     return;
 
-  dir = g_dir_open (dirname, 0, NULL);
-  if (!dir)
-    return;
+  module_filename = build_module_filename (module_name);
 
-  while ((name = g_dir_read_name (dir)))
+  for (; *paths; paths++)
     {
-      if (is_valid_module_name (name))
+      GDir *dir;
+
+      dir = g_dir_open (*paths, 0, NULL);
+      if (!dir)
+	return;
+
+      while ((name = g_dir_read_name (dir)))
 	{
-	  TranslitModule *module;
-	  gchar *path;
-
-	  path = g_build_filename (dirname, name, NULL);
-	  module = translit_module_new (path);
-
-	  if (!g_type_module_use (G_TYPE_MODULE (module)))
+	  if (g_strcmp0 (name, module_filename) == 0)
 	    {
+	      TranslitModule *module;
+	      gchar *path;
+
+	      path = g_build_filename (*paths, name, NULL);
+	      module = translit_module_new (path);
+
+	      if (g_type_module_use (G_TYPE_MODULE (module)))
+		{
+		  g_free (path);
+		  g_dir_close (dir);
+		  g_free (module_filename);
+		  return;
+		}
+
 	      g_printerr ("Failed to load module: %s\n", path);
 	      g_object_unref (module);
 	      g_free (path);
-	      continue;
 	    }
-	  g_free (path);
 	}
+      g_dir_close (dir);
     }
-  g_dir_close (dir);
+  g_free (module_filename);
 }
 
 /**
@@ -276,42 +280,57 @@ translit_filter_get (const gchar *backend,
     }
 
   if (filter_types == NULL)
-    {
-      const char *module_path;
+    filter_types = g_hash_table_new_full (g_str_hash,
+					  g_str_equal,
+					  (GDestroyNotify) g_free,
+					  NULL);
 
-      filter_types = g_hash_table_new_full (g_str_hash,
-					    g_str_equal,
-					    (GDestroyNotify) g_free,
-					    NULL);
+  data = g_hash_table_lookup (filter_types, backend);
+  if (data == NULL)
+    {
+      const gchar *module_path;
+      gchar **paths;
+      gchar *default_paths[] = { MODULEDIR, NULL };
+
       module_path = g_getenv ("TRANSLIT_MODULE_PATH");
       if (module_path)
-	{
-	  char **paths = g_strsplit (module_path, G_SEARCHPATH_SEPARATOR_S, 0);
-	  gint i;
-	  for (i = 0; paths[i] != NULL; i++)
-	    load_all_modules (paths[i]);
-	  g_strfreev (paths);
-	}
+	paths = g_strsplit (module_path, G_SEARCHPATH_SEPARATOR_S, 0);
       else
-	load_all_modules (MODULEDIR);
+	paths = g_strdupv (default_paths);
+      load_module ((const gchar **) paths, backend);
+      g_strfreev (paths);
     }
 
   data = g_hash_table_lookup (filter_types, backend);
   if (data != NULL)
     {
       GType type = GPOINTER_TO_SIZE (data);
+      GParameter parameters[2] = {
+	{ "language", G_VALUE_INIT },
+	{ "name", G_VALUE_INIT }
+      };
+      g_value_init (&parameters[0].value, G_TYPE_STRING);
+      g_value_set_string (&parameters[0].value, language);
+      g_value_init (&parameters[1].value, G_TYPE_STRING);
+      g_value_set_string (&parameters[1].value, name);
+
       if (g_type_is_a (type, G_TYPE_INITABLE))
-	filter = g_initable_new (type,
-				 NULL,
-				 NULL,
-				 "language", language,
-				 "name", name,
-				 NULL);
+	{
+	  GError *error = NULL;
+	  filter = g_initable_newv (type,
+				    G_N_ELEMENTS (parameters),
+				    parameters,
+				    NULL,
+				    &error);
+	  if (filter == NULL)
+	    g_printerr ("can't initialize filter backend %s: %s\n",
+			backend, error->message);
+	}
       else
-	filter = g_object_new (type,
-			       "language", language,
-			       "name", name,
-			       NULL);
+	filter = g_object_newv (type,
+				G_N_ELEMENTS (parameters),
+				parameters);
+
       if (filter != NULL)
 	{
 	  if (filters == NULL)
@@ -332,4 +351,10 @@ translit_filter_implement_backend (const gchar *backend, GType type)
   g_hash_table_insert (filter_types,
 		       g_strdup (backend),
 		       GSIZE_TO_POINTER (type));
+}
+
+GQuark
+translit_module_error_quark (void)
+{
+  return g_quark_from_static_string ("translit-module-error-quark");
 }
