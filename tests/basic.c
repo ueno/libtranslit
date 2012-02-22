@@ -30,6 +30,7 @@ basic (void)
   g_assert_error (error,
 		  TRANSLIT_FILTER_ERROR,
 		  TRANSLIT_FILTER_ERROR_NO_BACKEND_TYPE);
+  g_error_free (error);
 
   error = NULL;
   filter = translit_filter_get ("m17n", "nonexistent", "nonexistent",
@@ -37,6 +38,7 @@ basic (void)
   g_assert_error (error,
 		  TRANSLIT_FILTER_ERROR,
 		  TRANSLIT_FILTER_ERROR_LOAD_FAILED);
+  g_error_free (error);
 
   error = NULL;
   filter = translit_filter_get ("m17n", "hi", "nonexistent",
@@ -44,6 +46,7 @@ basic (void)
   g_assert_error (error,
 		  TRANSLIT_FILTER_ERROR,
 		  TRANSLIT_FILTER_ERROR_LOAD_FAILED);
+  g_error_free (error);
 
   error = NULL;
   filter = translit_filter_get ("m17n", "hi", "inscript",

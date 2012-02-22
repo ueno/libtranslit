@@ -346,7 +346,10 @@ load_module (const gchar **paths, const char *module_name)
 
       dir = g_dir_open (*paths, 0, NULL);
       if (!dir)
-	return;
+	{
+	  g_free (module_filename);
+	  return;
+	}
 
       while ((name = g_dir_read_name (dir)))
 	{
@@ -449,9 +452,9 @@ translit_filter_get (const gchar *backend,
 
   filter_type = GPOINTER_TO_SIZE (data);
   g_value_init (&filter_parameters[0].value, G_TYPE_STRING);
-  g_value_set_string (&filter_parameters[0].value, language);
+  g_value_take_string (&filter_parameters[0].value, language);
   g_value_init (&filter_parameters[1].value, G_TYPE_STRING);
-  g_value_set_string (&filter_parameters[1].value, name);
+  g_value_take_string (&filter_parameters[1].value, name);
 
   if (g_type_is_a (filter_type, G_TYPE_INITABLE))
     {

@@ -81,6 +81,8 @@ translit_filter_m17n_real_filter (TranslitFilter *self,
   gint retval;
 
   m17n->symbol = msymbol (name);
+  g_free (name);
+
   retval = minput_filter (m17n->ic, m17n->symbol, NULL);
   return retval != 0;
 }
@@ -139,7 +141,7 @@ translit_filter_m17n_class_init (TranslitFilterM17nClass *klass)
 static void
 translit_filter_m17n_class_finalize (TranslitFilterM17nClass *klass)
 {
-  m17n_object_unref (utf8_converter);
+  mconv_free_converter (utf8_converter);
   M17N_FINI ();
 }
 
