@@ -400,9 +400,9 @@ translit_filter_get (const gchar *backend,
   GType filter_type;
   TranslitFilter *filter = NULL;
   GParameter filter_parameters[2] = {
-	{ "language", G_VALUE_INIT },
-	{ "name", G_VALUE_INIT }
-      };
+    { "language", { 0 } },
+    { "name", { 0 } }
+  };
   gpointer data;
 
   filter_id = g_strdup_printf ("%s:%s:%s", backend, language, name);
