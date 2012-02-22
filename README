@@ -8,21 +8,23 @@ Test:
  >>> from gi.repository import Translit
  >>> filter = Translit.Filter.get("m17n", "hi", "inscript")
  >>> filter.filter('a', 0)
- False
+ True
  >>> filter.poll_output()
  '\xe0\xa5\x8b'                 # U+094B
  >>> filter.filter('d', 0)      # 'd' = U+094D or 'dd' = U+094D + U+200c
- True
- >>> filter.filter('d', 0)
  False
+ >>> filter.filter('d', 0)
+ True
  >>> filter.poll_output()
  '\xe0\xa5\x8d\xe2\x80\x8c'     # U+094D + U+200c
  >>> filter.filter('d', 0)
- True
- >>> filter.filter('a', 0)
  False
+ >>> filter.filter('a', 0)
+ True
  >>> filter.poll_output()
  '\xe0\xa5\x8d\xe0\xa5\x8b'     # U+094D + U+094B
+ >>> filter.translit('abc')
+ ('\xe0\xa5\x8b\xe0\xa4\xb5\xe0\xa4\xae', True)
 
 License:
 

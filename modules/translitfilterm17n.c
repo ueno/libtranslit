@@ -84,7 +84,7 @@ translit_filter_m17n_real_filter (TranslitFilter *self,
   g_free (name);
 
   retval = minput_filter (m17n->ic, m17n->symbol, NULL);
-  return retval != 0;
+  return retval == 0;
 }
 
 static gchar *

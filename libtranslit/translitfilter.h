@@ -66,6 +66,9 @@ gboolean        translit_filter_filter      (TranslitFilter      *filter,
                                              gchar                ascii,
                                              TranslitModifierType modifiers);
 gchar          *translit_filter_poll_output (TranslitFilter      *filter);
+gchar          *translit_filter_translit    (TranslitFilter      *filter,
+                                             const gchar         *ascii,
+                                             gboolean            *finished);
 
 TranslitFilter *translit_filter_get         (const gchar         *backend,
                                              const gchar         *language,

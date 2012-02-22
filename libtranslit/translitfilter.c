@@ -296,7 +296,7 @@ translit_filter_init (TranslitFilter *self)
  * @ascii: an ASCII char input
  * @modifiers: modifier mask
  *
- * Returns: %TRUE if the input is filtered, %FALSE otherwise
+ * Returns: %TRUE if the transliteration has finished, %FALSE otherwise
  */
 gboolean
 translit_filter_filter (TranslitFilter      *filter,
@@ -317,6 +317,37 @@ gchar *
 translit_filter_poll_output (TranslitFilter *filter)
 {
   return TRANSLIT_FILTER_GET_CLASS (filter)->poll_output (filter);
+}
+
+/**
+ * translit_filter_translit:
+ * @filter: a #TranslitFilter
+ * @ascii: an ASCII string
+ * @finished: (out): whether the transliteration has finished
+ *
+ * Convenient method repeatedly calling translit_filter_filter() and
+ * translit_filter_poll_output().
+ * Returns: a string
+ */
+gchar *
+translit_filter_translit (TranslitFilter *filter,
+                          const gchar    *ascii,
+                          gboolean       *finished)
+{
+  GString *str = g_string_sized_new (strlen (ascii));
+  gboolean retval = FALSE;
+  for (; *ascii != '\0'; ascii++)
+    {
+      retval = translit_filter_filter (filter, *ascii, 0);
+      if (retval)
+	{
+	  gchar *output = translit_filter_poll_output (filter);
+	  g_string_append (str, output);
+	  g_free (output);
+	}
+    }
+  *finished = retval;
+  return g_string_free (str, FALSE);
 }
 
 static gchar *
