@@ -20,6 +20,7 @@ moduledir = $(pkglibdir)/modules
 
 libtranslitincludedir = $(includedir)/translit-@TRANSLIT_API_VERSION@
 libtranslitinclude_HEADERS =			\
+	translit.h				\
 	translittransliterator.h		\
 	$(NULL)
 
