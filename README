@@ -6,6 +6,7 @@ Test:
 
  $ python
  >>> from gi.repository import Translit
+
  >>> trans = Translit.Transliterator.get("m17n", "hi-inscript")
  >>> trans.transliterate("a")
  ('\xe0\xa5\x8b', 1L)			# U+094B
@@ -15,6 +16,10 @@ Test:
  ('\xe0\xa5\x8d', 0L)			# U+094D
  >>> trans.transliterate("dd")
  ('\xe0\xa5\x8d\xe2\x80\x8c', 2L)	# U+094D + U+200c
+
+ >>> trans = Translit.Transliterator.get("icu", "Latin-Katakana")
+ >>> trans.transliterate("aiueo")
+ ('\xe3\x82\xa2\xe3\x82\xa4\xe3\x82\xa6\xe3\x82\xa8\xe3\x82\xaa', 5L)
 
 License:
 

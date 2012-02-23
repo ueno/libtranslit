@@ -70,6 +70,28 @@ basic (void)
       g_free (output);
       g_object_unref (transliterator);
     }
+
+  error = NULL;
+  transliterator = translit_transliterator_get ("icu", "Latin-Katakana",
+						&error);
+  if (transliterator)
+    {
+      gchar *output;
+      guint endpos;
+      GError *error;
+
+      error = NULL;
+      output = translit_transliterator_transliterate (transliterator,
+						      "aiueo",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 5);
+      g_assert_cmpstr (output, ==, "アイウエオ");
+
+      g_free (output);
+      g_object_unref (transliterator);
+    }
 }
 
 int

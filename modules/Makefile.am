@@ -24,24 +24,47 @@ module_flags =							\
 	--export-symbols-regex '^translit_module_(load|unload)'	\
 	$(NULL)
 
+AM_CFLAGS =					\
+	$(GLIB_CFLAGS)				\
+	$(GIO_CFLAGS)				\
+	$(GOBJECT_CFLAGS)			\
+	$(GMODULE_CFLAGS)			\
+	$(NULL)
+AM_LDFLAGS =					\
+	$(GLIB_LIBS)				\
+	$(GIO_LIBS)				\
+	$(GOBJECT_LIBS)				\
+	$(GMODULE_LIBS)				\
+	$(NULL)
+
+if ENABLE_ICU
+module_LTLIBRARIES += libtransliticu.la
+libtransliticu_la_SOURCES = transliteratoricu.c icumodule.c
+libtransliticu_la_CFLAGS =			\
+	-I$(top_srcdir)				\
+	$(ICU_CFLAGS)				\
+	$(AM_CFLAGS)				\
+	$(NULL)
+libtransliticu_la_LDFLAGS = $(module_flags)
+libtransliticu_la_LIBADD =			\
+	$(ICU_LIBS)				\
+	$(AM_LDFLAGS)				\
+	$(NULL)
+noinst_HEADERS = transliteratoricu.h
+endif
+
 if ENABLE_M17N_LIB
 module_LTLIBRARIES += libtranslitm17n.la
 libtranslitm17n_la_SOURCES = transliteratorm17n.c m17nmodule.c
 libtranslitm17n_la_CFLAGS =			\
 	-I$(top_srcdir)				\
 	$(M17N_CFLAGS)				\
-	$(GLIB_CFLAGS)				\
-	$(GIO_CFLAGS)				\
-	$(GOBJECT_CFLAGS)			\
-	$(GMODULE_CFLAGS)			\
+	$(AM_CFLAGS)				\
 	$(NULL)
 libtranslitm17n_la_LDFLAGS = $(module_flags)
 libtranslitm17n_la_LIBADD =			\
 	$(M17N_LIBS)				\
-	$(GLIB_LIBS)				\
-	$(GIO_LIBS)				\
-	$(GOBJECT_LIBS)				\
-	$(GMODULE_LIBS)				\
+	$(AM_LDFLAGS)				\
 	$(NULL)
 noinst_HEADERS = transliteratorm17n.h
 endif

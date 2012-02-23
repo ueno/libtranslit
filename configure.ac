@@ -76,6 +76,15 @@ PKG_CHECK_MODULES([GOBJECT], [gobject-2.0], ,
 PKG_CHECK_MODULES([GMODULE], [gmodule-2.0], ,
   [AC_MSG_ERROR([can't find gmodule])])
 
+# check for icu
+AC_ARG_ENABLE([icu],
+	AS_HELP_STRING([--enable-icu], [Enable ICU filter]),
+	[enable_icu=$enableval], [enable_icu=auto])
+if test "x$enable_icu" != "xno"; then
+   PKG_CHECK_MODULES([ICU], [icu-io], enable_icu=yes, enable_icu=no)
+fi
+AM_CONDITIONAL([ENABLE_ICU], [test "x$enable_icu" = "xyes"])
+
 # check for m17n-lib
 AC_ARG_ENABLE([m17n-lib],
 	AS_HELP_STRING([--enable-m17n-lib], [Enable m17n-lib filter]),

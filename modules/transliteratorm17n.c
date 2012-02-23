@@ -19,6 +19,7 @@
 #include <libtranslit/translit.h>
 #include <m17n.h>
 #include <gio/gio.h>
+#include <string.h>
 
 #define TYPE_TRANSLITERATOR_M17N (transliterator_m17n_get_type())
 #define TRANSLITERATOR_M17N(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_TRANSLITERATOR_M17N, TransliteratorM17n))
