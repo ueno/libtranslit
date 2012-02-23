@@ -16,12 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "translitfilterm17n.h"
+#include "transliteratorm17n.h"
 
 void
 translit_module_load (GTypeModule *module)
 {
-  translit_filter_m17n_register (module);
+  transliterator_m17n_register (module);
 }
 
 void

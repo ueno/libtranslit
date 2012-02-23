@@ -16,11 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __LIBTRANSLIT_TRANSLIT_FILTER_M17N_H__
-#define __LIBTRANSLIT_TRANSLIT_FILTER_M17N_H__
+#ifndef __TRANSLITERATOR_M17N_H__
+#define __TRANSLITERATOR_M17N_H__
 
 #include <glib-object.h>
 
-void translit_filter_m17n_register (GTypeModule *module);
+void transliterator_m17n_register (GTypeModule *module);
 
-#endif	/* __LIBTRANSLIT_TRANSLIT_FILTER_M17N_H__ */
+#endif	/* __TRANSLITERATOR_M17N_H__ */

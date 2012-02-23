@@ -21,49 +21,54 @@
 static void
 basic (void)
 {
-  TranslitFilter *filter;
+  TranslitTransliterator *transliterator;
   GError *error;
 
   error = NULL;
-  filter = translit_filter_get ("nonexistent", "nonexistent", "nonexistent",
-				&error);
+  transliterator = translit_transliterator_get ("nonexistent", "nonexistent",
+						&error);
   g_assert_error (error,
-		  TRANSLIT_FILTER_ERROR,
-		  TRANSLIT_FILTER_ERROR_NO_BACKEND_TYPE);
+		  TRANSLIT_ERROR,
+		  TRANSLIT_ERROR_NO_SUCH_BACKEND);
   g_error_free (error);
 
   error = NULL;
-  filter = translit_filter_get ("m17n", "nonexistent", "nonexistent",
-				&error);
+  transliterator = translit_transliterator_get ("m17n",
+						"nonexistent-nonexistent",
+						&error);
   g_assert_error (error,
-		  TRANSLIT_FILTER_ERROR,
-		  TRANSLIT_FILTER_ERROR_LOAD_FAILED);
+		  TRANSLIT_ERROR,
+		  TRANSLIT_ERROR_LOAD_FAILED);
   g_error_free (error);
 
   error = NULL;
-  filter = translit_filter_get ("m17n", "hi", "nonexistent",
-				&error);
+  transliterator = translit_transliterator_get ("m17n", "hi-nonexistent",
+						&error);
   g_assert_error (error,
-		  TRANSLIT_FILTER_ERROR,
-		  TRANSLIT_FILTER_ERROR_LOAD_FAILED);
+		  TRANSLIT_ERROR,
+		  TRANSLIT_ERROR_LOAD_FAILED);
   g_error_free (error);
 
   error = NULL;
-  filter = translit_filter_get ("m17n", "hi", "inscript",
-				&error);
-  if (filter)
+  transliterator = translit_transliterator_get ("m17n", "hi-inscript",
+						&error);
+  if (transliterator)
     {
-      gboolean retval;
       gchar *output;
+      guint endpos;
+      GError *error;
 
-      retval = translit_filter_filter (filter, 'a', 0);
-      g_assert_cmpint (retval, ==, 0);
-
-      output = translit_filter_poll_output (filter);
+      error = NULL;
+      output = translit_transliterator_transliterate (transliterator,
+						      "a",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 1);
       g_assert_cmpstr (output, ==, "ो");
 
       g_free (output);
-      g_object_unref (filter);
+      g_object_unref (transliterator);
     }
 }
 

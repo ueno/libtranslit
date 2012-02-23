@@ -26,7 +26,7 @@ module_flags =							\
 
 if ENABLE_M17N_LIB
 module_LTLIBRARIES += libtranslitm17n.la
-libtranslitm17n_la_SOURCES = translitfilterm17n.c m17nmodule.c
+libtranslitm17n_la_SOURCES = transliteratorm17n.c m17nmodule.c
 libtranslitm17n_la_CFLAGS =			\
 	-I$(top_srcdir)				\
 	$(M17N_CFLAGS)				\
@@ -43,7 +43,7 @@ libtranslitm17n_la_LIBADD =			\
 	$(GOBJECT_LIBS)				\
 	$(GMODULE_LIBS)				\
 	$(NULL)
-noinst_HEADERS = translitfilterm17n.h
+noinst_HEADERS = transliteratorm17n.h
 endif
 
 -include $(top_srcdir)/git.mk

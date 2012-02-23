@@ -22,18 +22,16 @@
 enum
   {
     PROP_0,
-    PROP_LANGUAGE,
     PROP_NAME
   };
 
-G_DEFINE_TYPE (TranslitFilter, translit_filter, G_TYPE_OBJECT);
+G_DEFINE_TYPE (TranslitTransliterator, translit_transliterator, G_TYPE_OBJECT);
 
-#define TRANSLIT_FILTER_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TRANSLIT_TYPE_FILTER, TranslitFilterPrivate))
+#define TRANSLIT_TRANSLITERATOR_GET_PRIVATE(obj)			\
+  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TRANSLIT_TYPE_TRANSLITERATOR, TranslitTransliteratorPrivate))
 
-struct _TranslitFilterPrivate
+struct _TranslitTransliteratorPrivate
 {
-  char *language;
   char *name;
 };
 
@@ -159,43 +157,34 @@ translit_module_new (const gchar *filename)
   return module;
 }
 
-static GHashTable *filters = NULL;
-static GHashTable *filter_types = NULL;
+static GHashTable *transliterators = NULL;
+static GHashTable *transliterator_types = NULL;
 
 GQuark
-translit_filter_error_quark (void)
+translit_error_quark (void)
 {
-  return g_quark_from_static_string ("translit-filter-error-quark");
-}
-
-static gboolean
-translit_filter_real_filter (TranslitFilter      *self,
-                             gchar                ascii,
-                             TranslitModifierType modifiers)
-{
-  return FALSE;
+  return g_quark_from_static_string ("translit-error-quark");
 }
 
 static gchar *
-translit_filter_real_poll_output (TranslitFilter *self)
+translit_transliterator_real_transliterate (TranslitTransliterator *self,
+                                            const gchar            *input,
+                                            guint                  *endpos,
+                                            GError                **error)
 {
   return NULL;
 }
 
 static void
-translit_filter_set_property (GObject      *object,
-                              guint         prop_id,
-                              const GValue *value,
-                              GParamSpec   *pspec)
+translit_transliterator_set_property (GObject      *object,
+				      guint         prop_id,
+				      const GValue *value,
+				      GParamSpec   *pspec)
 {
-  TranslitFilterPrivate *priv = TRANSLIT_FILTER_GET_PRIVATE (object);
+  TranslitTransliteratorPrivate *priv = TRANSLIT_TRANSLITERATOR_GET_PRIVATE (object);
 
   switch (prop_id)
     {
-    case PROP_LANGUAGE:
-      g_free (priv->language);
-      priv->language = g_value_dup_string (value);
-      break;
     case PROP_NAME:
       g_free (priv->name);
       priv->name = g_value_dup_string (value);
@@ -209,18 +198,15 @@ translit_filter_set_property (GObject      *object,
 }
 
 static void
-translit_filter_get_property (GObject    *object,
-                              guint       prop_id,
-                              GValue     *value,
-                              GParamSpec *pspec)
+translit_transliterator_get_property (GObject    *object,
+				      guint       prop_id,
+				      GValue     *value,
+				      GParamSpec *pspec)
 {
-  TranslitFilterPrivate *priv = TRANSLIT_FILTER_GET_PRIVATE (object);
+  TranslitTransliteratorPrivate *priv = TRANSLIT_TRANSLITERATOR_GET_PRIVATE (object);
 
   switch (prop_id)
     {
-    case PROP_LANGUAGE:
-      g_value_set_string (value, priv->language);
-      break;
     case PROP_NAME:
       g_value_set_string (value, priv->name);
       break;
@@ -233,48 +219,34 @@ translit_filter_get_property (GObject    *object,
 }
 
 static void
-translit_filter_finalize (GObject *object)
+translit_transliterator_finalize (GObject *object)
 {
-  TranslitFilterPrivate *priv = TRANSLIT_FILTER_GET_PRIVATE (object);
+  TranslitTransliteratorPrivate *priv = TRANSLIT_TRANSLITERATOR_GET_PRIVATE (object);
 
-  g_free (priv->language);
   g_free (priv->name);
 
-  G_OBJECT_CLASS (translit_filter_parent_class)->finalize (object);
+  G_OBJECT_CLASS (translit_transliterator_parent_class)->finalize (object);
 }
 
 static void
-translit_filter_class_init (TranslitFilterClass *klass)
+translit_transliterator_class_init (TranslitTransliteratorClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GParamSpec *pspec;
 
-  klass->filter = translit_filter_real_filter;
-  klass->poll_output = translit_filter_real_poll_output;
+  klass->transliterate = translit_transliterator_real_transliterate;
 
-  object_class->set_property = translit_filter_set_property;
-  object_class->get_property = translit_filter_get_property;
-  object_class->finalize = translit_filter_finalize;
+  object_class->set_property = translit_transliterator_set_property;
+  object_class->get_property = translit_transliterator_get_property;
+  object_class->finalize = translit_transliterator_finalize;
 
   g_type_class_add_private (object_class,
-			    sizeof (TranslitFilterPrivate));
+			    sizeof (TranslitTransliteratorPrivate));
 
   /**
-   * TranslitFilter:language:
+   * TranslitTransliterator:name:
    *
-   * The language which #TranslitFilter supports
-   */
-  pspec = g_param_spec_string ("language",
-			       "language",
-			       "Language",
-			       NULL,
-			       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
-  g_object_class_install_property (object_class, PROP_LANGUAGE, pspec);
-
-  /**
-   * TranslitFilter:name:
-   *
-   * The transliteration which #TranslitFilter supports
+   * The transliteration which #TranslitTransliterator supports
    */
   pspec = g_param_spec_string ("name",
 			       "name",
@@ -285,69 +257,27 @@ translit_filter_class_init (TranslitFilterClass *klass)
 }
 
 static void
-translit_filter_init (TranslitFilter *self)
+translit_transliterator_init (TranslitTransliterator *self)
 {
-  self->priv = TRANSLIT_FILTER_GET_PRIVATE (self);
+  self->priv = TRANSLIT_TRANSLITERATOR_GET_PRIVATE (self);
 }
 
 /**
- * translit_filter_filter:
- * @filter: a #TranslitFilter
- * @ascii: an ASCII char input
- * @modifiers: modifier mask
+ * translit_transliterator_transliterate:
+ * @transliterator: a #TranslitTransliterator
+ * @input: an input string in UTF-8
+ * @endpos: (out): ending position of transliteration (in chars)
+ * @error: a #GError
  *
- * Returns: %TRUE if the transliteration has finished, %FALSE otherwise
- */
-gboolean
-translit_filter_filter (TranslitFilter      *filter,
-                        gchar                ascii,
-                        TranslitModifierType modifiers)
-{
-  return TRANSLIT_FILTER_GET_CLASS (filter)->filter (filter, ascii, modifiers);
-}
-
-/**
- * translit_filter_poll_output:
- * @filter: a #TranslitFilter
- *
- * Get output string kept in @filter.
- * Returns: a string
+ * Returns: a newly allocated output string
  */
 gchar *
-translit_filter_poll_output (TranslitFilter *filter)
+translit_transliterator_transliterate (TranslitTransliterator *transliterator,
+                                       const gchar            *input,
+                                       guint                  *endpos,
+                                       GError                **error)
 {
-  return TRANSLIT_FILTER_GET_CLASS (filter)->poll_output (filter);
-}
-
-/**
- * translit_filter_translit:
- * @filter: a #TranslitFilter
- * @ascii: an ASCII string
- * @finished: (out): whether the transliteration has finished
- *
- * Convenient method repeatedly calling translit_filter_filter() and
- * translit_filter_poll_output().
- * Returns: a string
- */
-gchar *
-translit_filter_translit (TranslitFilter *filter,
-                          const gchar    *ascii,
-                          gboolean       *finished)
-{
-  GString *str = g_string_sized_new (strlen (ascii));
-  gboolean retval = FALSE;
-  for (; *ascii != '\0'; ascii++)
-    {
-      retval = translit_filter_filter (filter, *ascii, 0);
-      if (retval)
-	{
-	  gchar *output = translit_filter_poll_output (filter);
-	  g_string_append (str, output);
-	  g_free (output);
-	}
-    }
-  *finished = retval;
-  return g_string_free (str, FALSE);
+  return TRANSLIT_TRANSLITERATOR_GET_CLASS (transliterator)->transliterate (transliterator, input, endpos, error);
 }
 
 static gchar *
@@ -411,49 +341,46 @@ load_module (const gchar **paths, const char *module_name)
 }
 
 /**
- * translit_filter_get:
+ * translit_transliterator_get:
  * @backend: backend name (e.g. "m17n")
- * @language: language code (e.g. "hi")
- * @name: name of the filter (e.g. "inscript")
+ * @name: name of the transliterator (e.g. "hi-inscript")
  * @error: a #GError
  *
- * Get a filter instance whose name is @name.
+ * Get a transliterator instance whose name is @name.
  *
- * Returns: (transfer none): a #TranslitFilter
+ * Returns: (transfer none): a #TranslitTransliterator
  */
-TranslitFilter *
-translit_filter_get (const gchar *backend,
-                     const gchar *language,
-                     const gchar *name,
-                     GError     **error)
+TranslitTransliterator *
+translit_transliterator_get (const gchar *backend,
+			     const gchar *name,
+			     GError     **error)
 {
-  gchar *filter_id;
-  GType filter_type;
-  TranslitFilter *filter = NULL;
-  GParameter filter_parameters[2] = {
-    { "language", { 0 } },
+  gchar *transliterator_id;
+  GType transliterator_type;
+  TranslitTransliterator *transliterator = NULL;
+  GParameter transliterator_parameters[1] = {
     { "name", { 0 } }
   };
   gpointer data;
 
-  filter_id = g_strdup_printf ("%s:%s:%s", backend, language, name);
-  if (filters != NULL)
+  transliterator_id = g_strdup_printf ("%s:%s", backend, name);
+  if (transliterators != NULL)
     {
-      filter = g_hash_table_lookup (filters, filter_id);
-      if (filter != NULL)
+      transliterator = g_hash_table_lookup (transliterators, transliterator_id);
+      if (transliterator != NULL)
 	{
-	  g_free (filter_id);
-	  return filter;
+	  g_free (transliterator_id);
+	  return transliterator;
 	}
     }
 
-  if (filter_types == NULL)
-    filter_types = g_hash_table_new_full (g_str_hash,
-					  g_str_equal,
-					  (GDestroyNotify) g_free,
-					  NULL);
+  if (transliterator_types == NULL)
+    transliterator_types = g_hash_table_new_full (g_str_hash,
+						  g_str_equal,
+						  (GDestroyNotify) g_free,
+						  NULL);
 
-  data = g_hash_table_lookup (filter_types, backend);
+  data = g_hash_table_lookup (transliterator_types, backend);
   if (data == NULL)
     {
       const gchar *module_path;
@@ -469,56 +396,54 @@ translit_filter_get (const gchar *backend,
       g_strfreev (paths);
     }
 
-  data = g_hash_table_lookup (filter_types, backend);
+  data = g_hash_table_lookup (transliterator_types, backend);
   if (data == NULL)
     {
-      g_free (filter_id);
+      g_free (transliterator_id);
       g_set_error (error,
-		   TRANSLIT_FILTER_ERROR,
-		   TRANSLIT_FILTER_ERROR_NO_BACKEND_TYPE,
-		   "no such backend type %s",
+		   TRANSLIT_ERROR,
+		   TRANSLIT_ERROR_NO_SUCH_BACKEND,
+		   "no such backend %s",
 		   backend);
       return NULL;
     }
 
-  filter_type = GPOINTER_TO_SIZE (data);
-  g_value_init (&filter_parameters[0].value, G_TYPE_STRING);
-  g_value_take_string (&filter_parameters[0].value, language);
-  g_value_init (&filter_parameters[1].value, G_TYPE_STRING);
-  g_value_take_string (&filter_parameters[1].value, name);
+  transliterator_type = GPOINTER_TO_SIZE (data);
+  g_value_init (&transliterator_parameters[0].value, G_TYPE_STRING);
+  g_value_take_string (&transliterator_parameters[0].value, name);
 
-  if (g_type_is_a (filter_type, G_TYPE_INITABLE))
+  if (g_type_is_a (transliterator_type, G_TYPE_INITABLE))
     {
-      filter = g_initable_newv (filter_type,
-				G_N_ELEMENTS (filter_parameters),
-				filter_parameters,
-				NULL,
-				error);
-      if (filter == NULL)
+      transliterator = g_initable_newv (transliterator_type,
+					G_N_ELEMENTS (transliterator_parameters),
+					transliterator_parameters,
+					NULL,
+					error);
+      if (transliterator == NULL)
 	{
-	  g_free (filter_id);
+	  g_free (transliterator_id);
 	  return NULL;
 	}
     }
   else
-    filter = g_object_newv (filter_type,
-			    G_N_ELEMENTS (filter_parameters),
-			    filter_parameters);
+    transliterator = g_object_newv (transliterator_type,
+				    G_N_ELEMENTS (transliterator_parameters),
+				    transliterator_parameters);
 
-  if (filters == NULL)
-    filters = g_hash_table_new_full (g_str_hash,
-				     g_str_equal,
-				     (GDestroyNotify) g_free,
-				     NULL);
-  g_hash_table_insert (filters, g_strdup (filter_id), filter);
-  g_free (filter_id);
-  return filter;
+  if (transliterators == NULL)
+    transliterators = g_hash_table_new_full (g_str_hash,
+					     g_str_equal,
+					     (GDestroyNotify) g_free,
+					     NULL);
+  g_hash_table_insert (transliterators, g_strdup (transliterator_id), transliterator);
+  g_free (transliterator_id);
+  return transliterator;
 }
 
 void
-translit_filter_implement_backend (const gchar *backend, GType type)
+translit_implement_transliterator (const gchar *backend, GType type)
 {
-  g_hash_table_insert (filter_types,
+  g_hash_table_insert (transliterator_types,
 		       g_strdup (backend),
 		       GSIZE_TO_POINTER (type));
 }

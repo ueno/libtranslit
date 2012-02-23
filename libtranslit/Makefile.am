@@ -20,14 +20,12 @@ moduledir = $(pkglibdir)/modules
 
 libtranslitincludedir = $(includedir)/translit-@TRANSLIT_API_VERSION@
 libtranslitinclude_HEADERS =			\
-	translit.h				\
-	translitfilter.h			\
-	translittypes.h				\
+	translittransliterator.h		\
 	$(NULL)
 
 CLEANFILES =
 
-libtranslit_la_SOURCES = translitfilter.c
+libtranslit_la_SOURCES = translittransliterator.c
 libtranslit_la_CFLAGS =				\
 	-I$(top_srcdir)				\
 	-DMODULEDIR=\"$(moduledir)\"		\

@@ -16,5 +16,4 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libtranslit/translittypes.h>
-#include <libtranslit/translitfilter.h>
+#include <libtranslit/translittransliterator.h>
