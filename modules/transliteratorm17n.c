@@ -114,6 +114,7 @@ transliterator_m17n_real_transliterate (TranslitTransliterator *self,
 	    {
 	      gchar *output = mtext_to_utf8 (mt);
 	      g_string_append (string, output);
+	      g_free (output);
 	    }
 	  m17n_object_unref (mt);
 	  n_filtered = 0;
@@ -125,6 +126,7 @@ transliterator_m17n_real_transliterate (TranslitTransliterator *self,
     {
       gchar *output = mtext_to_utf8 (m17n->ic->preedit);
       g_string_append (string, output);
+      g_free (output);
     }
 
   *endpos = g_utf8_strlen (input, -1) - n_filtered;
