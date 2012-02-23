@@ -1,7 +1,5 @@
 * libtranslit -- transliteration library with multiple backends
 
-WIP.
-
 Test:
 
  $ python
