@@ -60,7 +60,8 @@ GQuark translit_error_quark (void);
 typedef enum {
   TRANSLIT_ERROR_NO_SUCH_BACKEND,
   TRANSLIT_ERROR_LOAD_FAILED,
-  TRANSLIT_ERROR_INVALID_INPUT
+  TRANSLIT_ERROR_INVALID_INPUT,
+  TRANSLIT_ERROR_FAILED
 } TranslitErrorEnum;
 
 GType                   translit_transliterator_get_type

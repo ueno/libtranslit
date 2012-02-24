@@ -59,10 +59,24 @@ ustring_to_utf8 (const UChar *ustr, int32_t ustrLength)
 
   errorCode = 0;
   u_strToUTF8 (NULL, 0, &destLength, ustr, ustrLength, &errorCode);
+  if (errorCode != U_BUFFER_OVERFLOW_ERROR)
+    {
+      g_warning ("can't get the number of byte required to convert ustring: %s",
+		 u_errorName (errorCode));
+      return NULL;
+    }
   dest = g_malloc0 (destLength + 1);
 
   errorCode = 0;
-  u_strToUTF8 (dest, destLength, NULL, ustr, ustrLength, &errorCode);
+  u_strToUTF8 (dest, destLength + 1, NULL, ustr, ustrLength, &errorCode);
+  if (errorCode != U_ZERO_ERROR)
+    {
+      g_free (dest);
+      g_warning ("can't convert ustring to UTF-8 string: %s",
+		 u_errorName (errorCode));
+      return NULL;
+    }
+
   return dest;
 }
 
@@ -75,10 +89,25 @@ ustring_from_utf8 (const gchar *utf8, int32_t *ustrLength)
 
   errorCode = 0;
   u_strFromUTF8 (NULL, 0, &destLength, utf8, utf8Length, &errorCode);
+  if (errorCode != U_BUFFER_OVERFLOW_ERROR)
+    {
+      g_warning ("can't get the number of chars in UTF-8 string: %s",
+		 u_errorName (errorCode));
+      return NULL;
+    }
+
   dest = g_malloc0_n (destLength + 1, sizeof(UChar));
 
   errorCode = 0;
   u_strFromUTF8 (dest, destLength + 1, NULL, utf8, utf8Length, &errorCode);
+  if (errorCode != U_ZERO_ERROR)
+    {
+      g_free (dest);
+      g_warning ("can't convert UTF-8 string to ustring: %s",
+		 u_errorName (errorCode));
+      return NULL;
+    }
+
   *ustrLength = destLength;
   return dest;
 }
@@ -93,16 +122,38 @@ transliterator_icu_real_transliterate (TranslitTransliterator *self,
   gchar *output;
   gint n_filtered = 0;
   UChar *ustr;
-  int32_t ustrLength, limit;
+  int32_t ustrLength, ustrCapacity, limit;
   UErrorCode errorCode;
 
   ustr = ustring_from_utf8 (input, &ustrLength);
   limit = ustrLength;
-  errorCode = 0;
-  utrans_transUChars (icu->trans,
-		      ustr, &ustrLength, ustrLength,
-		      0, &limit,
-		      &errorCode);
+  ustrCapacity = ustrLength + 1;
+
+  do
+    {
+      errorCode = 0;
+      utrans_transUChars (icu->trans,
+			  ustr, &ustrLength, ustrCapacity,
+			  0, &limit,
+			  &errorCode);
+      if (errorCode == U_BUFFER_OVERFLOW_ERROR)
+	{
+	  ustrCapacity *= 2;
+	  ustr = g_realloc (ustr, ustrCapacity);
+	}
+    }
+  while (errorCode == U_BUFFER_OVERFLOW_ERROR);
+
+  if (errorCode != U_ZERO_ERROR)
+    {
+      g_free (ustr);
+      g_set_error (error,
+		   TRANSLIT_ERROR,
+		   TRANSLIT_ERROR_FAILED,
+		   "failed to transliterate: %s", u_errorName (errorCode));
+      return NULL;
+    }
+
   output = ustring_to_utf8 (ustr, ustrLength);
   g_free (ustr);
 
