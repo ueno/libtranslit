@@ -266,7 +266,7 @@ translit_transliterator_init (TranslitTransliterator *self)
  * translit_transliterator_transliterate:
  * @transliterator: a #TranslitTransliterator
  * @input: an input string in UTF-8
- * @endpos: (out): ending position of transliteration (in chars)
+ * @endpos: (out) (allow-none): ending position of transliteration (in chars)
  * @error: a #GError
  *
  * Returns: a newly allocated output string
@@ -277,7 +277,19 @@ translit_transliterator_transliterate (TranslitTransliterator *transliterator,
                                        guint                  *endpos,
                                        GError                **error)
 {
-  return TRANSLIT_TRANSLITERATOR_GET_CLASS (transliterator)->transliterate (transliterator, input, endpos, error);
+  g_return_val_if_fail (TRANSLIT_IS_TRANSLITERATOR (transliterator), NULL);
+
+  if (!g_utf8_validate (input, -1, NULL))
+    {
+      g_set_error (error,
+		   TRANSLIT_ERROR,
+		   TRANSLIT_ERROR_INVALID_INPUT,
+		   "not a valid UTF-8 sequence");
+      return NULL;
+    }
+
+  return TRANSLIT_TRANSLITERATOR_GET_CLASS (transliterator)->
+    transliterate (transliterator, input, endpos, error);
 }
 
 static gchar *

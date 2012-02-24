@@ -96,15 +96,6 @@ transliterator_icu_real_transliterate (TranslitTransliterator *self,
   int32_t ustrLength, limit;
   UErrorCode errorCode;
 
-  if (!g_utf8_validate (input, -1, NULL))
-    {
-      g_set_error (error,
-		   TRANSLIT_ERROR,
-		   TRANSLIT_ERROR_INVALID_INPUT,
-		   "not a valid UTF-8 sequence");
-      return NULL;
-    }
-
   ustr = ustring_from_utf8 (input, &ustrLength);
   limit = ustrLength;
   errorCode = 0;
@@ -114,7 +105,10 @@ transliterator_icu_real_transliterate (TranslitTransliterator *self,
 		      &errorCode);
   output = ustring_to_utf8 (ustr, ustrLength);
   g_free (ustr);
-  *endpos = limit;
+
+  if (endpos)
+    *endpos = limit;
+
   return output;
 }
 

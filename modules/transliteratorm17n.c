@@ -80,15 +80,6 @@ transliterator_m17n_real_transliterate (TranslitTransliterator *self,
   GString *string;
   gint n_filtered = 0;
 
-  if (!g_utf8_validate (input, -1, NULL))
-    {
-      g_set_error (error,
-		   TRANSLIT_ERROR,
-		   TRANSLIT_ERROR_INVALID_INPUT,
-		   "not a valid UTF-8 sequence");
-      return NULL;
-    }
-
   string = g_string_sized_new (strlen (input));
   minput_reset_ic (m17n->ic);
   for (p = input; *p != '\0'; p = g_utf8_next_char (p))
@@ -130,7 +121,9 @@ transliterator_m17n_real_transliterate (TranslitTransliterator *self,
       g_free (output);
     }
 
-  *endpos = g_utf8_strlen (input, -1) - n_filtered;
+  if (endpos)
+    *endpos = g_utf8_strlen (input, -1) - n_filtered;
+
   return g_string_free (string, FALSE);
 }
 
