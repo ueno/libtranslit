@@ -78,6 +78,7 @@ transliterator_m17n_real_transliterate (TranslitTransliterator *self,
   TransliteratorM17n *m17n = TRANSLITERATOR_M17N (self);
   const gchar *p;
   GString *string;
+  gchar *output;
   gint n_filtered = 0;
 
   string = g_string_sized_new (strlen (input));
@@ -104,7 +105,7 @@ transliterator_m17n_real_transliterate (TranslitTransliterator *self,
 	  retval = minput_lookup (m17n->ic, symbol, NULL, mt);
 	  if (retval == 0)
 	    {
-	      gchar *output = mtext_to_utf8 (mt);
+	      output = mtext_to_utf8 (mt);
 	      g_string_append (string, output);
 	      g_free (output);
 	    }
@@ -114,12 +115,10 @@ transliterator_m17n_real_transliterate (TranslitTransliterator *self,
       else
 	n_filtered++;
     }
-  if (n_filtered > 0)
-    {
-      gchar *output = mtext_to_utf8 (m17n->ic->preedit);
-      g_string_append (string, output);
-      g_free (output);
-    }
+
+  output = mtext_to_utf8 (m17n->ic->preedit);
+  g_string_append (string, output);
+  g_free (output);
 
   if (endpos)
     *endpos = g_utf8_strlen (input, -1) - n_filtered;
