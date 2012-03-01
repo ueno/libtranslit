@@ -103,12 +103,16 @@ transliterator_m17n_real_transliterate (TranslitTransliterator *self,
 	  MText *mt = mtext ();
 
 	  retval = minput_lookup (m17n->ic, symbol, NULL, mt);
-	  if (retval == 0)
-	    {
-	      output = mtext_to_utf8 (mt);
-	      g_string_append (string, output);
-	      g_free (output);
-	    }
+
+	  if (mtext_len (mt) > 0) {
+	    output = mtext_to_utf8 (mt);
+	    g_string_append (string, output);
+	    g_free (output);
+	  }
+
+	  if (retval)
+	    g_string_append_unichar (string, uc);
+
 	  m17n_object_unref (mt);
 	  n_filtered = 0;
 	}
