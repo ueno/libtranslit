@@ -181,13 +181,13 @@ translit_transliterator_set_property (GObject      *object,
 				      const GValue *value,
 				      GParamSpec   *pspec)
 {
-  TranslitTransliteratorPrivate *priv = TRANSLIT_TRANSLITERATOR_GET_PRIVATE (object);
+  TranslitTransliterator *trans = TRANSLIT_TRANSLITERATOR (object);
 
   switch (prop_id)
     {
     case PROP_NAME:
-      g_free (priv->name);
-      priv->name = g_value_dup_string (value);
+      g_free (trans->priv->name);
+      trans->priv->name = g_value_dup_string (value);
       break;
     default:
       g_object_set_property (object,
@@ -203,12 +203,12 @@ translit_transliterator_get_property (GObject    *object,
 				      GValue     *value,
 				      GParamSpec *pspec)
 {
-  TranslitTransliteratorPrivate *priv = TRANSLIT_TRANSLITERATOR_GET_PRIVATE (object);
+  TranslitTransliterator *trans = TRANSLIT_TRANSLITERATOR (object);
 
   switch (prop_id)
     {
     case PROP_NAME:
-      g_value_set_string (value, priv->name);
+      g_value_set_string (value, trans->priv->name);
       break;
     default:
       g_object_get_property (object,
@@ -221,9 +221,9 @@ translit_transliterator_get_property (GObject    *object,
 static void
 translit_transliterator_finalize (GObject *object)
 {
-  TranslitTransliteratorPrivate *priv = TRANSLIT_TRANSLITERATOR_GET_PRIVATE (object);
+  TranslitTransliterator *trans = TRANSLIT_TRANSLITERATOR (object);
 
-  g_free (priv->name);
+  g_free (trans->priv->name);
 
   G_OBJECT_CLASS (translit_transliterator_parent_class)->finalize (object);
 }
