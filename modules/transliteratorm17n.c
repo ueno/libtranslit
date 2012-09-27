@@ -182,14 +182,28 @@ initable_init (GInitable *initable,
 		"name", &name,
 		NULL);
 
-  strv = g_strsplit (name, "-", 2);
-  g_return_val_if_fail (g_strv_length (strv) == 2, FALSE);
+  if (0 == strcmp(name, "latn-post") ||
+      0 == strcmp(name, "latn-pre") ||
+      0 == strcmp(name, "rfc1345") ||
+      0 == strcmp(name, "syrc-phonetic") ||
+      0 == strcmp(name, "unicode"))
+    {
+      m17n->im = minput_open_im (msymbol ("t"),
+                                msymbol (name),
+                                NULL);
+    }
+  else
+    {
+      strv = g_strsplit (name, "-", 2);
+      g_return_val_if_fail (g_strv_length (strv) == 2, FALSE);
 
-  m17n->im = minput_open_im (msymbol (strv[0]),
-			     msymbol (strv[1]),
-			     NULL);
+      m17n->im = minput_open_im (msymbol (strv[0]),
+                                msymbol (strv[1]),
+                                NULL);
+      g_strfreev (strv);
+    }
+
   g_free (name);
-  g_strfreev (strv);
 
   if (m17n->im)
     {
