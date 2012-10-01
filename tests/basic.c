@@ -52,6 +52,8 @@ basic (void)
   error = NULL;
   transliterator = translit_transliterator_get ("m17n", "hi-inscript",
 						&error);
+  g_assert_no_error (error);
+
   if (transliterator)
     {
       gchar *output;
@@ -72,8 +74,102 @@ basic (void)
     }
 
   error = NULL;
+  transliterator = translit_transliterator_get ("m17n", "da-post",
+						&error);
+  g_assert_no_error (error);
+
+  if (transliterator)
+    {
+      gchar *output;
+      guint endpos;
+      GError *error;
+
+      error = NULL;
+      output = translit_transliterator_transliterate (transliterator,
+						      "oeaae'aeaaa",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 11);
+      g_assert_cmpstr (output, ==, "øåéæaa");
+
+      g_free (output);
+      g_object_unref (transliterator);
+    }
+
+  error = NULL;
+  transliterator = translit_transliterator_get ("m17n", "t-latn-post",
+						&error);
+  g_assert_no_error (error);
+
+  if (transliterator)
+    {
+      gchar *output;
+      guint endpos;
+      GError *error;
+
+      error = NULL;
+      output = translit_transliterator_transliterate (transliterator,
+						      "a/a//",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 5);
+      g_assert_cmpstr (output, ==, "åa/");
+
+      g_free (output);
+
+      output = translit_transliterator_transliterate (transliterator,
+						      "a/",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 2);
+      g_assert_cmpstr (output, ==, "å");
+
+      g_free (output);
+      g_object_unref (transliterator);
+    }
+
+  error = NULL;
+  transliterator = translit_transliterator_get ("m17n", "ja-anthy",
+						&error);
+  g_assert_no_error (error);
+
+  if (transliterator)
+    {
+      gchar *output;
+      guint endpos;
+      GError *error;
+
+      error = NULL;
+      output = translit_transliterator_transliterate (transliterator,
+						      "kakikukeko",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 10);
+      g_assert_cmpstr (output, ==, "かきくけこ");
+
+      g_free (output);
+
+      output = translit_transliterator_transliterate (transliterator,
+						      "kakikukek",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 9);
+      g_assert_cmpstr (output, ==, "かきくけk");
+
+      g_free (output);
+      g_object_unref (transliterator);
+    }
+
+  error = NULL;
   transliterator = translit_transliterator_get ("icu", "Latin-Katakana",
 						&error);
+  g_assert_no_error (error);
+
   if (transliterator)
     {
       gchar *output;
@@ -90,8 +186,104 @@ basic (void)
       g_assert_cmpstr (output, ==, "アイウエオ");
 
       g_free (output);
+
+      output = translit_transliterator_transliterate (transliterator,
+						      "kakikukeko",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 5);
+      g_assert_cmpstr (output, ==, "カキクケコ");
+
+      g_free (output);
+
+      output = translit_transliterator_transliterate (transliterator,
+						      "kakikukek",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 5);
+      g_assert_cmpstr (output, ==, "カキクケク");
+
+      g_free (output);
+
+      output = translit_transliterator_transliterate (transliterator,
+						      "tachitsuteto",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 5);
+      g_assert_cmpstr (output, ==, "タチツテト");
+
+      g_free (output);
+
+      output = translit_transliterator_transliterate (transliterator,
+						      "tachitsutet",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 5);
+      g_assert_cmpstr (output, ==, "タチツテテ");
+
+      g_free (output);
+
+      output = translit_transliterator_transliterate (transliterator,
+						      "tachitsutec",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 5);
+      g_assert_cmpstr (output, ==, "タチツテク");
+
+      g_free (output);
+
+      output = translit_transliterator_transliterate (transliterator,
+						      "tachitetsut",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 5);
+      g_assert_cmpstr (output, ==, "タチテツテ");
+
+      g_free (output);
       g_object_unref (transliterator);
     }
+
+  error = NULL;
+  transliterator = translit_transliterator_get ("icu", "Russian-Latin/BGN",
+						&error);
+  g_assert_no_error (error);
+
+  if (transliterator)
+    {
+      gchar *output;
+      guint endpos;
+      GError *error;
+
+      error = NULL;
+      output = translit_transliterator_transliterate (transliterator,
+						      "Ф",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 1);
+      g_assert_cmpstr (output, ==, "F");
+
+      g_free (output);
+
+      output = translit_transliterator_transliterate (transliterator,
+						      "Щ",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 4);
+      g_assert_cmpstr (output, ==, "SHCH");
+
+      g_free (output);
+
+      g_object_unref (transliterator);
+    }
+
 }
 
 int
