@@ -123,9 +123,11 @@ transliterator_icu_real_transliterate (TranslitTransliterator *self,
   gint n_filtered = 0;
   UChar *ustr;
   int32_t ustrLength, ustrCapacity, limit;
+  int32_t inputUstrLength;
   UErrorCode errorCode;
 
   ustr = ustring_from_utf8 (input, &ustrLength);
+  inputUstrLength = ustrLength;
   limit = ustrLength;
   ustrCapacity = ustrLength + 1;
 
@@ -138,8 +140,10 @@ transliterator_icu_real_transliterate (TranslitTransliterator *self,
 			  &errorCode);
       if (errorCode == U_BUFFER_OVERFLOW_ERROR)
 	{
-	  ustrCapacity *= 2;
+	  ustrCapacity = ustrLength + 1;
 	  ustr = g_realloc (ustr, ustrCapacity);
+	  ustrLength = inputUstrLength;
+	  limit = inputUstrLength;
 	}
     }
   while (errorCode == U_BUFFER_OVERFLOW_ERROR);
