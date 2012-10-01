@@ -83,19 +83,25 @@ transliterator_m17n_real_transliterate (TranslitTransliterator *self,
 
   string = g_string_sized_new (strlen (input));
   minput_reset_ic (m17n->ic);
-  for (p = input; *p != '\0'; p = g_utf8_next_char (p))
+  for (p = input; ; p = g_utf8_next_char (p))
     {
       gunichar uc = g_utf8_get_char (p);
       MSymbol symbol;
-      gint length;
-      gchar *utf8;
       gint retval;
 
-      length = g_unichar_to_utf8 (uc, NULL);
-      utf8 = g_slice_alloc0 (length + 1);
-      g_unichar_to_utf8 (uc, utf8);
-      symbol = msymbol (utf8);
-      g_slice_free1 (length, utf8);
+      if (*p == '\0')
+	symbol = Mnil;
+      else
+	{
+	  gint length;
+	  gchar *utf8;
+
+	  length = g_unichar_to_utf8 (uc, NULL);
+	  utf8 = g_slice_alloc0 (length + 1);
+	  g_unichar_to_utf8 (uc, utf8);
+	  symbol = msymbol (utf8);
+	  g_slice_free1 (length, utf8);
+	}
 
       retval = minput_filter (m17n->ic, symbol, NULL);
       if (retval == 0)
@@ -118,6 +124,9 @@ transliterator_m17n_real_transliterate (TranslitTransliterator *self,
 	}
       else
 	n_filtered++;
+
+      if (symbol == Mnil)
+	break;
     }
 
   output = mtext_to_utf8 (m17n->ic->preedit);

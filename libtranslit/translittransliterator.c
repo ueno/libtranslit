@@ -32,7 +32,7 @@ G_DEFINE_TYPE (TranslitTransliterator, translit_transliterator, G_TYPE_OBJECT);
 
 struct _TranslitTransliteratorPrivate
 {
-  char *name;
+  gchar *name;
 };
 
 typedef struct _TranslitModule TranslitModule;
