@@ -134,6 +134,14 @@ transliterator_icu_real_transliterate (TranslitTransliterator *self,
   do
     {
       errorCode = 0;
+
+      /* We can't use utrans_transIncrementalUChars here, since the
+       * output is sometimes unacceptable.
+       *
+       * For example, with the "Latin-Katakana" transliterator,
+       * "kakikukeko" does not turn into Japanese characters until one
+       * more vovel character follows.
+       */
       utrans_transUChars (icu->trans,
 			  ustr, &ustrLength, ustrCapacity,
 			  0, &limit,
@@ -162,7 +170,7 @@ transliterator_icu_real_transliterate (TranslitTransliterator *self,
   g_free (ustr);
 
   if (endpos)
-    *endpos = limit;
+    *endpos = inputUstrLength;
 
   return output;
 }
