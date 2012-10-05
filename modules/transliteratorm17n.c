@@ -129,10 +129,6 @@ transliterator_m17n_real_transliterate (TranslitTransliterator *self,
 	break;
     }
 
-  output = mtext_to_utf8 (m17n->ic->preedit);
-  g_string_append (string, output);
-  g_free (output);
-
   if (endpos)
     *endpos = g_utf8_strlen (input, -1) - n_filtered;
 
