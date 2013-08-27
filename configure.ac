@@ -104,6 +104,9 @@ AM_CONDITIONAL([ENABLE_GTK_DOC], false)
 # check gobject introspection
 GOBJECT_INTROSPECTION_CHECK([0.9.0])
 
+# check vapigen
+VAPIGEN_CHECK
+
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile
 libtranslit/Makefile

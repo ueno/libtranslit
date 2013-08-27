@@ -74,4 +74,22 @@ typelib_DATA = $(INTROSPECTION_GIRS:.gir=.typelib)
 CLEANFILES += $(gir_DATA) $(typelib_DATA)
 endif
 
+if ENABLE_VAPIGEN
+-include $(VAPIGEN_MAKEFILE)
+
+libtranslit.vapi: Translit-1.0.gir libtranslit.deps
+
+VAPIGEN_VAPIS = libtranslit.vapi
+
+libtranslit_vapi_DEPS = gio-2.0
+libtranslit_vapi_METADATADIRS = $(srcdir)
+libtranslit_vapi_FILES = Translit-1.0.gir
+
+vapidir = $(datadir)/vala/vapi
+vapi_DATA = $(VAPIGEN_VAPIS) $(VAPIGEN_VAPIS:.vapi=.deps)
+
+DISTCLEANFILES += $(VAPIGEN_VAPIS)
+EXTRA_DIST += Translit-1.0.metadata libtranslit.deps
+endif
+
 -include $(top_srcdir)/git.mk
