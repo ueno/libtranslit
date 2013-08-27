@@ -18,7 +18,8 @@ lib_LTLIBRARIES = libtranslit.la
 
 moduledir = $(pkglibdir)/modules
 
-libtranslitincludedir = $(includedir)/translit-@TRANSLIT_API_VERSION@
+libtranslitincludedir = $(includedir)/translit-@TRANSLIT_API_VERSION@/libtranslit
+
 libtranslitinclude_HEADERS =			\
 	translit.h				\
 	translittransliterator.h		\

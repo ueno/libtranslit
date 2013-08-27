@@ -26,4 +26,4 @@ Description: ASCII to Unicode transliteration library
 Version: @VERSION@
 Requires: gobject-2.0 gio-2.0 gmodule-2.0
 Libs: -L${libdir} -ltranslit
-Cflags: -I${includedir}/translit-@FEP_API_VERSION@
+Cflags: -I${includedir}/translit-@TRANSLIT_API_VERSION@
