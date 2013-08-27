@@ -26,6 +26,8 @@ libtranslitinclude_HEADERS =			\
 	$(NULL)
 
 CLEANFILES =
+DISTCLEANFILES =
+EXTRA_DIST =
 
 libtranslit_la_SOURCES = translittransliterator.c
 libtranslit_la_CFLAGS =				\
