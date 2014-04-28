@@ -52,68 +52,6 @@ G_DEFINE_DYNAMIC_TYPE_EXTENDED (TransliteratorIcu,
 						       initable_iface_init));
 
 static gchar *
-ustring_to_utf8 (const UChar *ustr, int32_t ustrLength)
-{
-  gchar *dest;
-  int32_t destLength;
-  UErrorCode errorCode;
-
-  errorCode = 0;
-  u_strToUTF8 (NULL, 0, &destLength, ustr, ustrLength, &errorCode);
-  if (errorCode != U_BUFFER_OVERFLOW_ERROR)
-    {
-      g_warning ("can't get the number of byte required to convert ustring: %s",
-		 u_errorName (errorCode));
-      return NULL;
-    }
-  dest = g_malloc0 (destLength + 1);
-
-  errorCode = 0;
-  u_strToUTF8 (dest, destLength + 1, NULL, ustr, ustrLength, &errorCode);
-  if (errorCode != U_ZERO_ERROR)
-    {
-      g_free (dest);
-      g_warning ("can't convert ustring to UTF-8 string: %s",
-		 u_errorName (errorCode));
-      return NULL;
-    }
-
-  return dest;
-}
-
-static UChar *
-ustring_from_utf8 (const gchar *utf8, int32_t *ustrLength)
-{
-  UChar *dest;
-  int32_t destLength, utf8Length = strlen (utf8);
-  UErrorCode errorCode;
-
-  errorCode = 0;
-  u_strFromUTF8 (NULL, 0, &destLength, utf8, utf8Length, &errorCode);
-  if (errorCode != U_BUFFER_OVERFLOW_ERROR)
-    {
-      g_warning ("can't get the number of chars in UTF-8 string: %s",
-		 u_errorName (errorCode));
-      return NULL;
-    }
-
-  dest = g_malloc0_n (destLength + 1, sizeof(UChar));
-
-  errorCode = 0;
-  u_strFromUTF8 (dest, destLength + 1, NULL, utf8, utf8Length, &errorCode);
-  if (errorCode != U_ZERO_ERROR)
-    {
-      g_free (dest);
-      g_warning ("can't convert UTF-8 string to ustring: %s",
-		 u_errorName (errorCode));
-      return NULL;
-    }
-
-  *ustrLength = destLength;
-  return dest;
-}
-
-static gchar *
 transliterator_icu_real_transliterate (TranslitTransliterator *self,
                                        const gchar            *input,
                                        guint                  *endpos,
@@ -121,19 +59,43 @@ transliterator_icu_real_transliterate (TranslitTransliterator *self,
 {
   TransliteratorIcu *icu = TRANSLITERATOR_ICU (self);
   gchar *output;
+  int32_t outputLength;
   gint n_filtered = 0;
   UChar *ustr;
   int32_t ustrLength, ustrCapacity, limit;
+  UChar *inputUstr;
   int32_t inputUstrLength;
   UErrorCode errorCode;
 
-  ustr = ustring_from_utf8 (input, &ustrLength);
-  inputUstrLength = ustrLength;
-  limit = ustrLength;
-  ustrCapacity = ustrLength;
+  errorCode = 0;
+  u_strFromUTF8 (NULL, 0, &inputUstrLength, input, strlen (input), &errorCode);
+  if (errorCode != U_BUFFER_OVERFLOW_ERROR)
+    {
+      g_warning ("can't get the number of chars in UTF-8 string: %s",
+		 u_errorName (errorCode));
+      return NULL;
+    }
+
+  inputUstr = g_malloc0_n (inputUstrLength + 1, sizeof (UChar));
+
+  errorCode = 0;
+  u_strFromUTF8 (inputUstr, inputUstrLength + 1, NULL, input, strlen (input),
+		 &errorCode);
+  if (errorCode != U_ZERO_ERROR)
+    {
+      g_free (inputUstr);
+      g_warning ("can't convert UTF-8 string to ustring: %s",
+		 u_errorName (errorCode));
+      return NULL;
+    }
+
+  ustrCapacity = inputUstrLength + 1;
+  ustr = g_memdup (inputUstr, ustrCapacity * sizeof (UChar));
 
   do
     {
+      ustrLength = inputUstrLength;
+      limit = inputUstrLength;
       errorCode = 0;
 
       /* We can't use utrans_transIncrementalUChars here, since the
@@ -149,15 +111,16 @@ transliterator_icu_real_transliterate (TranslitTransliterator *self,
 			  &errorCode);
       if (errorCode == U_BUFFER_OVERFLOW_ERROR)
 	{
-	  ustrCapacity = ustrLength;
-	  g_free(ustr);
-	  ustr = ustring_from_utf8 (input, &ustrLength);
-	  ustr = g_realloc (ustr, ustrCapacity*sizeof(UChar));
-	  ustrLength = inputUstrLength;
-	  limit = inputUstrLength;
+	  ustrCapacity = ustrLength + 1;
+
+	  ustr = g_realloc_n (ustr, ustrCapacity, sizeof (UChar));
+	  memset (ustr, 0, ustrCapacity * sizeof (UChar));
+	  memcpy (ustr, inputUstr, inputUstrLength * sizeof (UChar));
 	}
     }
   while (errorCode == U_BUFFER_OVERFLOW_ERROR);
+
+  g_free (inputUstr);
 
   if (errorCode != U_ZERO_ERROR && errorCode != U_STRING_NOT_TERMINATED_WARNING)
     {
@@ -169,8 +132,26 @@ transliterator_icu_real_transliterate (TranslitTransliterator *self,
       return NULL;
     }
 
-  output = ustring_to_utf8 (ustr, ustrLength);
+  errorCode = 0;
+  u_strToUTF8 (NULL, 0, &outputLength, ustr, ustrLength, &errorCode);
+  if (errorCode != U_BUFFER_OVERFLOW_ERROR)
+    {
+      g_warning ("can't get the number of byte required to convert ustring: %s",
+		 u_errorName (errorCode));
+      return NULL;
+    }
+
+  output = g_malloc0 (outputLength + 1);
+  errorCode = 0;
+  u_strToUTF8 (output, outputLength + 1, NULL, ustr, ustrLength, &errorCode);
   g_free (ustr);
+  if (errorCode != U_ZERO_ERROR)
+    {
+      g_free (output);
+      g_warning ("can't convert ustring to UTF-8 string: %s",
+		 u_errorName (errorCode));
+      return NULL;
+    }
 
   if (endpos)
     *endpos = inputUstrLength;
@@ -217,24 +198,50 @@ initable_init (GInitable *initable,
 {
   TransliteratorIcu *icu = TRANSLITERATOR_ICU (initable);
   gchar *name;
-  UChar *id;
-  int32_t idLength;
+  UChar *idUstr;
+  int32_t idUstrLength;
   UErrorCode errorCode;
 
   g_object_get (G_OBJECT (initable),
 		"name", &name,
 		NULL);
 
-  id = ustring_from_utf8 (name, &idLength);
-  g_free (name);
+  errorCode = 0;
+  u_strFromUTF8 (NULL, 0, &idUstrLength, name, strlen (name), &errorCode);
+  if (errorCode != U_BUFFER_OVERFLOW_ERROR)
+    {
+      g_free (name);
+      g_set_error (error,
+		   TRANSLIT_ERROR,
+		   TRANSLIT_ERROR_LOAD_FAILED,
+		   "can't get the number of chars in UTF-8 string: %s",
+		   u_errorName (errorCode));
+      return FALSE;
+    }
+
+  idUstr = g_malloc0_n (idUstrLength + 1, sizeof (UChar));
 
   errorCode = 0;
-  icu->trans = utrans_openU (id, idLength,
+  u_strFromUTF8 (idUstr, idUstrLength + 1, NULL, name, strlen (name), &errorCode);
+  g_free (name);
+  if (errorCode != U_ZERO_ERROR)
+    {
+      g_free (idUstr);
+      g_set_error (error,
+		   TRANSLIT_ERROR,
+		   TRANSLIT_ERROR_LOAD_FAILED,
+		   "can't convert UTF-8 string to ustring: %s",
+		   u_errorName (errorCode));
+      return FALSE;
+    }
+
+  errorCode = 0;
+  icu->trans = utrans_openU (idUstr, idUstrLength,
 			     UTRANS_FORWARD,
 			     NULL, -1,
 			     NULL,
 			     &errorCode);
-  g_free (id);
+  g_free (idUstr);
 
   if (icu->trans == NULL)
     {
