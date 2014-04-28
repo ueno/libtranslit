@@ -17,6 +17,7 @@
  */
 
 #include <libtranslit/translit.h>
+#include <locale.h>
 
 static void
 basic_load (void)
@@ -372,6 +373,7 @@ basic_icu (void)
 
 int
 main (int argc, char **argv) {
+  setlocale (LC_ALL, "");
   g_type_init ();
   g_test_init (&argc, &argv, NULL);
   g_test_add_func ("/libtranslit/basic/load", basic_load);
