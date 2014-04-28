@@ -19,7 +19,7 @@
 #include <libtranslit/translit.h>
 
 static void
-basic (void)
+basic_load (void)
 {
   TranslitTransliterator *transliterator;
   GError *error;
@@ -48,6 +48,13 @@ basic (void)
 		  TRANSLIT_ERROR,
 		  TRANSLIT_ERROR_LOAD_FAILED);
   g_error_free (error);
+}
+
+static void
+basic_m17n (void)
+{
+  TranslitTransliterator *transliterator;
+  GError *error;
 
   error = NULL;
   transliterator = translit_transliterator_get ("m17n", "hi-inscript",
@@ -164,6 +171,13 @@ basic (void)
       g_free (output);
       g_object_unref (transliterator);
     }
+}
+
+static void
+basic_icu (void)
+{
+  TranslitTransliterator *transliterator;
+  GError *error;
 
   error = NULL;
   transliterator = translit_transliterator_get ("icu", "Latin-Katakana",
@@ -360,6 +374,8 @@ int
 main (int argc, char **argv) {
   g_type_init ();
   g_test_init (&argc, &argv, NULL);
-  g_test_add_func ("/libtranslit/basic", basic);
+  g_test_add_func ("/libtranslit/basic/load", basic_load);
+  g_test_add_func ("/libtranslit/basic/m17n", basic_m17n);
+  g_test_add_func ("/libtranslit/basic/icu", basic_icu);
   return g_test_run ();
 }
