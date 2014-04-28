@@ -129,7 +129,7 @@ transliterator_icu_real_transliterate (TranslitTransliterator *self,
   ustr = ustring_from_utf8 (input, &ustrLength);
   inputUstrLength = ustrLength;
   limit = ustrLength;
-  ustrCapacity = ustrLength + 1;
+  ustrCapacity = ustrLength;
 
   do
     {
@@ -148,15 +148,17 @@ transliterator_icu_real_transliterate (TranslitTransliterator *self,
 			  &errorCode);
       if (errorCode == U_BUFFER_OVERFLOW_ERROR)
 	{
-	  ustrCapacity = ustrLength + 1;
-	  ustr = g_realloc (ustr, ustrCapacity);
+	  ustrCapacity = ustrLength;
+	  g_free(ustr);
+	  ustr = ustring_from_utf8 (input, &ustrLength);
+	  ustr = g_realloc (ustr, ustrCapacity*sizeof(UChar));
 	  ustrLength = inputUstrLength;
 	  limit = inputUstrLength;
 	}
     }
   while (errorCode == U_BUFFER_OVERFLOW_ERROR);
 
-  if (errorCode != U_ZERO_ERROR)
+  if (errorCode != U_ZERO_ERROR && errorCode != U_STRING_NOT_TERMINATED_WARNING)
     {
       g_free (ustr);
       g_set_error (error,

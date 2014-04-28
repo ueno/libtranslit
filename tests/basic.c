@@ -284,6 +284,76 @@ basic (void)
       g_object_unref (transliterator);
     }
 
+  error = NULL;
+  transliterator = translit_transliterator_get ("icu", "Hiragana-Latin",
+						&error);
+  g_assert_no_error (error);
+
+  if (transliterator)
+    {
+      gchar *output;
+      guint endpos;
+      GError *error;
+
+      error = NULL;
+      output = translit_transliterator_transliterate (transliterator,
+						      "か",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 1);
+      g_assert_cmpstr (output, ==, "ka");
+
+      g_free (output);
+
+      output = translit_transliterator_transliterate (transliterator,
+						      "かきくけこ",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 5);
+      g_assert_cmpstr (output, ==, "kakikukeko");
+
+      g_free (output);
+
+      g_object_unref (transliterator);
+    }
+
+  error = NULL;
+  transliterator = translit_transliterator_get ("icu", "Devanagari-Latin",
+						&error);
+  g_assert_no_error (error);
+
+  if (transliterator)
+    {
+      gchar *output;
+      guint endpos;
+      GError *error;
+
+      error = NULL;
+      output = translit_transliterator_transliterate (transliterator,
+						      "सॉ",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 2);
+      g_assert_cmpstr (output, ==, "sŏ");
+
+      g_free (output);
+
+      output = translit_transliterator_transliterate (transliterator,
+						      "सॉफ्टवेअरचे",
+						      &endpos,
+						      &error);
+      g_assert_no_error (error);
+      g_assert_cmpint (endpos, ==, 11);
+      g_assert_cmpstr (output, ==, "sŏphṭavē'aracē");
+
+      g_free (output);
+
+      g_object_unref (transliterator);
+    }
+
 }
 
 int
